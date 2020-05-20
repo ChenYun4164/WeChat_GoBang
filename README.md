@@ -6,7 +6,7 @@
 
 需要的工具主要分为以下三类：
 
-1.   <a href = “https://www.aiexp.info/pages/yixin-cn.html "> Yixin 奕心引擎</a>，这个引擎是国人所作，可以说是非商用版里面最强的五子棋AI
+1.   <a href="https://www.aiexp.info/pages/yixin-cn.html "> Yixin 奕心引擎</a>，这个引擎是国人所作，可以说是非商用版里面最强的五子棋AI
 
      一开始我想使用奕心的界面+引擎那款，因为可定制性足够强，结果发现Python 不好与GUI程序交互，所以就选择了引擎。然而尴尬的一点是，把官方文档翻了个遍都没有找到引擎的使用方法。不过后来在<a href="https://gomocup.org/"> 世界五子棋锦标赛</a>  找到了参加比赛的AI 必备的两种接口。
 
@@ -60,7 +60,7 @@ class mVars:
 
 ##### Yixin 引擎
 
-从<a href = “http://gomocup.org/static/download-ai/YIXIN18.zip">官网</a>上可以下载Yixin 引擎,结合 <a href = “http://petr.lastovicka.sweb.cz/protocl2en.htm">协议</a>  可以知道如何与引擎交互
+从<a href="http://gomocup.org/static/download-ai/YIXIN18.zip">官网</a>上可以下载Yixin 引擎,结合 <a href ="http://petr.lastovicka.sweb.cz/protocl2en.htm">协议</a>  可以知道如何与引擎交互
 
 使用 subprocess 让 python 与 引擎交互
 
