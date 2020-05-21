@@ -1,14 +1,16 @@
 class mVars:
     address='C:/Users/EA/Desktop/yixin/'    # 使用到的文件所存放地址
-    ip = '10.224.133.140:5555'              #ip 地址，详见adb模块中adb连接教程
+    ip = '10.234.21.167:5555'              #ip 地址，详见adb模块中adb连接教程
 
     boradOne = 67                           #一个相邻落子点的像素间隔
-    borad = (65,480)                        #棋盘的初始像素点，用来将图片像素坐标和棋盘坐标互转
+    boradBegin = (65,480)                        #棋盘的初始像素点，用来将图片像素坐标和棋盘坐标互转
     confirmBW = (820,1590,820+55,1590+60)   #用来确定己方是黑棋还是白棋的区域
     confirmWin = (660,1780,660+46,1780+46)  #用来确定是否胜利的区域
+    confirmReg = (130,990,220,1060)  #用来确定是否悔棋的区域
+    
     chickBack = (100,1820)                  #胜利后 返回图标 的位置
     chickBegin = (540,940)                  #开始匹配 的位置
-
+    chickRegret = (290,1050)                        #对方若后悔，则点击拒绝
 
 
 import subprocess as sub
@@ -18,7 +20,7 @@ class YiXin:
     def __init__(self):
         self.input('START 15')
         self.input('INFO timeout_match 200000')
-        self.input('INFO timeout_turn 7500')    #控制思考快慢
+        self.input('INFO timeout_turn 3500')    #控制思考快慢
 
         self.output()
         print("YiXin ready!!")
@@ -53,28 +55,26 @@ class ImageProcess:
     #缩放检测的图片
     def zoomImage(self,zoom):
         img = ac.imread(mVars.address+"confirmb.jpg")
-        img = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
-        ac.cv2.imwrite(mVars.address+'confirmb.jpg',img)
+        self.confirmB = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
 
         img = ac.imread(mVars.address+"confirmw.jpg")
-        img = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
-        ac.cv2.imwrite(mVars.address+'confirmw.jpg',img)
+        self.confirmW = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
 
         img = ac.imread(mVars.address+"confirmwin.jpg")
-        img = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
-        ac.cv2.imwrite(mVars.address+'confirmwin.jpg',img)
+        self.confirmWin = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
 
         img = ac.imread(mVars.address+"None.jpg")
-        img = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
-        ac.cv2.imwrite(mVars.address+'None.jpg',img)
+        self.bareBorad = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
 
         img = ac.imread(mVars.address+"objb.jpg")
-        img = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
-        ac.cv2.imwrite(mVars.address+'objb.jpg',img)
+        self.objb = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
 
         img = ac.imread(mVars.address+"objw.jpg")
-        img = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
-        ac.cv2.imwrite(mVars.address+'objw.jpg',img)
+        self.objw = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
+
+        img = ac.imread(mVars.address+"regret.jpg")
+        self.regret = ac.cv2.resize(img,(0,0),fx = zoom[0],fy = zoom[1])
+        
     
     #如果匹配成功，则返回中心像素点
     def matchImg(self,imgsrc,imgobj,confidence=0.8):
@@ -89,10 +89,10 @@ class ImageProcess:
         x = coord[0]
         y = coord[1]
         xcoord = ycoord = 0
-        while x>=mVars.borad[0]:
+        while x>=mVars.boradBegin[0]:
             x-=mVars.boradOne
             xcoord+=1
-        while y>=mVars.borad[1]:
+        while y>=mVars.boradBegin[1]:
             y-=mVars.boradOne
             ycoord+=1
 
@@ -100,7 +100,7 @@ class ImageProcess:
 
     #将棋盘坐标转化为像素坐标
     def transfromScreen(self,coord):
-        return (coord[0]*mVars.boradOne+mVars.borad[0],coord[1]*mVars.boradOne+mVars.borad[1])
+        return (coord[0]*mVars.boradOne+mVars.boradBegin[0],coord[1]*mVars.boradOne+mVars.boradBegin[1])
     
     #对比两张图片的差异
     def difference(self,img1,img2):
@@ -109,9 +109,12 @@ class ImageProcess:
 
 
 
+
+
+
 import os
 import time
-class Adb:
+class mAdb:
     #无线连接手机
     def __init__(self):
         os.system('adb connect '+mVars.ip)
@@ -140,24 +143,23 @@ class Adb:
 
 
 class System:
-    Yixin = YiXin() 
-    ImageP = ImageProcess()
-    Adb = Adb()
-    imgobj = None   #用来检测对手落子的图片
+    mYixin = YiXin() 
+    mImageP = ImageProcess()
+    mAdb = mAdb()
     certain = 0     #0表示未确认，1表示己方为白，2表示己方为黑
     
 
     #按手机像素适配
     def __init__(self):
-        piexl = self.Adb.resolution()
+        piexl = self.mAdb.resolution()
         zoom = (piexl[0]/1080,piexl[1]/1920)
         self.zoomVars(zoom)
-        self.ImageP.zoomImage(zoom)
+        self.mImageP.zoomImage(zoom)
    
     #缩放像素参数
     def zoomVars(self,zoom):
         mVars.boradOne = int(mVars.boradOne*zoom[0])
-        mVars.borad = (int(mVars.borad[0]*zoom[0]),int(mVars.borad[1]*zoom[1]))
+        mVars.boradBegin = (int(mVars.boradBegin[0]*zoom[0]),int(mVars.boradBegin[1]*zoom[1]))
         mVars.confirmBW = (
             int(mVars.confirmBW[0]*zoom[0]),int(mVars.confirmBW[1]*zoom[1]),
             int(mVars.confirmBW[2]*zoom[0]),int(mVars.confirmBW[3]*zoom[1])
@@ -166,41 +168,39 @@ class System:
             int(mVars.confirmWin[0]*zoom[0]),int(mVars.confirmWin[1]*zoom[1]),
             int(mVars.confirmWin[2]*zoom[0]),int(mVars.confirmWin[3]*zoom[1])
         )
-        mVars.chickBack = (
-            int(mVars.chickBack[0]*zoom[0]),
-            int(mVars.chickBack[1]*zoom[1]),
-        )
-        mVars.chickBegin = (
-            int(mVars.chickBegin[0]*zoom[0]),
-            int(mVars.chickBegin[1]*zoom[1]),
-        )
+        mVars.chickBack = (int(mVars.chickBack[0]*zoom[0]),int(mVars.chickBack[1]*zoom[1]))
+        mVars.chickBegin = (int(mVars.chickBegin[0]*zoom[0]),int(mVars.chickBegin[1]*zoom[1]))
+        mVars.chickRegret = (int(mVars.chickRegret[0]*zoom[0]),int(mVars.chickRegret[1]*zoom[1]))
 
     #确认是否胜利
     def confirmWin(self,imgsrc):
         x0,y0,x1,y1 = mVars.confirmWin
         imgsrc = imgsrc[y0:y1,x0:x1]
-        imgobj = ac.imread(mVars.address+'confirmwin.jpg')
-        return self.ImageP.matchImg(imgsrc,imgobj,0.9)
+
+        return self.mImageP.matchImg(imgsrc,self.mImageP.confirmWin,0.9)
     
     #确认己方是黑棋还是白棋
     def confirmBW(self,imgsrc):
         x0,y0,x1,y1 = mVars.confirmBW
         imgsrc = imgsrc[y0:y1,x0:x1]
-
-        imgobjw = ac.imread(mVars.address+'confirmw.jpg')
-        imgobjb = ac.imread(mVars.address+'confirmb.jpg')
         
-        if (self.ImageP.matchImg(imgsrc,imgobjw,0.8) != None):
+        if (self.mImageP.matchImg(imgsrc,self.mImageP.confirmW)):
             self.certain = 1
-            self.imgobj=ac.imread(mVars.address+'objb.jpg')
-        elif (self.ImageP.matchImg(imgsrc,imgobjb,0.8)!= None):
+            self.mImageP.imgobj = self.mImageP.objb
+        elif (self.mImageP.matchImg(imgsrc,self.mImageP.confirmB)):
             self.certain = 2
-            self.imgobj=ac.imread(mVars.address+'objw.jpg')
-    
+            self.mImageP.imgobj = self.mImageP.objw
+
+    def checkRegret(self,imgsrc):
+        x0,y0,x1,y1 = mVars.confirmReg
+        imgsrc = imgsrc[y0:y1,x0:x1]
+
+        return self.mImageP.matchImg(imgsrc,self.mImageP.regret)
+
     #做好比赛前准备，
     def ready(self):
         while True:
-            imgsrc = self.Adb.capture()
+            imgsrc = self.mAdb.capture()
             self.confirmBW(imgsrc)
             if(self.certain != 0):
                 break;
@@ -211,37 +211,35 @@ class System:
             self.runCommand('BEGIN')
             return imgsrc
         elif self.certain == 1:
-            return ac.imread(mVars.address+'None.jpg')
+            return self.mImageP.bareBorad
     
     #向Yixin 输入对方落点，获得Yixin 落点并点击屏幕
     def runCommand(self,COMMAND):
-        self.Yixin.input(COMMAND)
-        str = self.Yixin.output()
+        self.mYixin.input(COMMAND)
+        str = self.mYixin.output()
         a = str.find(',')
         b = str.find('\r')
 
-        piexl = self.ImageP.transfromScreen((int(str[0:a]),int(str[a+1:b])))
-        print(piexl)
-        self.Adb.click(piexl)
+        piexl = self.mImageP.transfromScreen((int(str[0:a]),int(str[a+1:b])))
+        
+        # if(self.checkRegret(self.mAdb.capture())):
+        #     self.mAdb.click(mVars.chickRegret)
+        self.mAdb.click(piexl)
 
     #开始游戏
     def play(self,imgsrc):
-        flag=False
-        imagep = self.ImageP
         oldimg = newimg = imgsrc
         while self.confirmWin(newimg) == None:
-            imgdif = imagep.difference(oldimg,newimg)
-            # ac.cv2.imwrite(mVars.address+'diff.jpg',imgdif)
-            coord = imagep.matchImg(imgdif,self.imgobj)
+            imgdif = self.mImageP.difference(oldimg,newimg)
+            coord = self.mImageP.matchImg(imgdif,self.mImageP.imgobj)
             print(coord)
             if(coord != None):
-                x, y = imagep.transformBoard(coord)
+                x, y = self.mImageP.transformBoard(coord)
                 COMMAND = "TURN %d,%d"%(x,y)
-                self.runCommand(COMMAND)
-            
+                self.runCommand(COMMAND)             
             time.sleep(1)
-            oldimg,newimg = newimg,self.Adb.capture()
-        
+            oldimg,newimg = newimg,self.mAdb.capture()
+
     #新一轮游戏
     def newGame(self):
         os.system('cls')
@@ -249,9 +247,9 @@ class System:
         time.sleep(0.5)
         os.system('adb shell input tap %d %d'%(mVars.chickBegin))
         
-        self.Yixin.restart()
+        self.mYixin.restart()
         self.certain = 0
-        self.imgobj = None
+        self.mImageP.imgobj = None
 
 
 
@@ -266,3 +264,5 @@ if __name__ == "__main__":
         print("You Win !! Next Game Will Begin After 4sec")
         time.sleep(4)
         msys.newGame()    
+
+
