@@ -1,16 +1,16 @@
 class mVars:
     address='C:/Users/EA/Desktop/yixin/'    # 使用到的文件所存放地址
-    ip = '10.234.21.167:5555'              #ip 地址，详见adb模块中adb连接教程
+    ip = '10.234.21.167:5555'               #ip 地址，详见adb模块中adb连接教程
 
     boradOne = 67                           #一个相邻落子点的像素间隔
-    boradBegin = (65,480)                        #棋盘的初始像素点，用来将图片像素坐标和棋盘坐标互转
+    boradBegin = (65,480)                   #棋盘的初始像素点，用来将图片像素坐标和棋盘坐标互转
     confirmBW = (820,1590,820+55,1590+60)   #用来确定己方是黑棋还是白棋的区域
     confirmWin = (660,1780,660+46,1780+46)  #用来确定是否胜利的区域
-    confirmReg = (130,990,220,1060)  #用来确定是否悔棋的区域
+    confirmReg = (130,990,220,1060)         #用来确定是否悔棋的区域
     
     chickBack = (100,1820)                  #胜利后 返回图标 的位置
     chickBegin = (540,940)                  #开始匹配 的位置
-    chickRegret = (290,1050)                        #对方若后悔，则点击拒绝
+    chickRegret = (290,1050)                #对方若后悔，则点击拒绝
 
 
 import subprocess as sub
@@ -136,8 +136,11 @@ class mAdb:
     #点击特定位置
     def click(self,piexl):
         os.system('adb shell input tap %d %d'%(piexl[0],piexl[1]))
+    
+    def doubleClick(self,piexl):
+        self.click(piexl)
         time.sleep(0.1)
-        os.system('adb shell input tap %d %d'%(piexl[0],piexl[1]))
+        self.click(piexl)
 
  
 
@@ -191,12 +194,6 @@ class System:
             self.certain = 2
             self.mImageP.imgobj = self.mImageP.objw
 
-    def checkRegret(self,imgsrc):
-        x0,y0,x1,y1 = mVars.confirmReg
-        imgsrc = imgsrc[y0:y1,x0:x1]
-
-        return self.mImageP.matchImg(imgsrc,self.mImageP.regret)
-
     #做好比赛前准备，
     def ready(self):
         while True:
@@ -222,9 +219,9 @@ class System:
 
         piexl = self.mImageP.transfromScreen((int(str[0:a]),int(str[a+1:b])))
         
-        if(self.checkRegret(self.mAdb.capture())):
-            self.mAdb.click(mVars.chickRegret)
-        self.mAdb.click(piexl)
+        
+        self.mAdb.click(mVars.chickRegret)
+        self.mAdb.doubleClick(piexl)
 
     #开始游戏
     def play(self,imgsrc):
@@ -243,9 +240,10 @@ class System:
     #新一轮游戏
     def newGame(self):
         os.system('cls')
-        os.system('adb shell input tap %d %d'%(mVars.chickBack))
+        self.mAdb.click(mVars.chickBack)
         time.sleep(0.5)
-        os.system('adb shell input tap %d %d'%(mVars.chickBegin))
+        self.mAdb.click(mVars.chickBegin)
+
         
         self.mYixin.restart()
         self.certain = 0
