@@ -222,8 +222,8 @@ class System:
 
         piexl = self.mImageP.transfromScreen((int(str[0:a]),int(str[a+1:b])))
         
-        # if(self.checkRegret(self.mAdb.capture())):
-        #     self.mAdb.click(mVars.chickRegret)
+        if(self.checkRegret(self.mAdb.capture())):
+            self.mAdb.click(mVars.chickRegret)
         self.mAdb.click(piexl)
 
     #开始游戏
